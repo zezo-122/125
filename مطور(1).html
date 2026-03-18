@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم الذكية | إدارة مشوارك</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --p: #5d3fd3; --s: #f59e0b; --bg: #f1f5f9; --card: #ffffff; --success: #22c55e; --danger: #ef4444; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); padding: 20px; direction: rtl; }
+        .header { background: var(--p); color: white; padding: 15px; text-align: center; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(93, 63, 211, 0.2); }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: var(--card); border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h3 { color: var(--p); margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: center; }
+        th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 0.9rem; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; vertical-align: middle; }
+        
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .type-mishwar { background: #e0e7ff; color: #4338ca; } 
+        .type-talab { background: #fef3c7; color: #d97706; } 
+
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .input-box { display: flex; flex-direction: column; gap: 10px; border-right: 3px solid #eee; padding-right: 15px; }
+        input { padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; }
+        .btn { padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 1rem; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-del { color: var(--danger); }
+        .btn-reset { color: var(--success); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2><i class="fas fa-tools"></i> لوحة التحكم والإدارة المركزية</h2>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-plus-circle"></i> إضافة بيانات أساسية</h3>
+        <div class="form-grid">
+            <div class="input-box">
+                <h4 style="color:#666">إضافة منطقة وسعر</h4>
+                <input type="text" id="areaName" placeholder="اسم المنطقة">
+                <input type="number" id="areaPrice" placeholder="السعر">
+                <button class="btn" style="background:var(--p)" onclick="addArea()">حفظ المنطقة +</button>
+            </div>
+            <div class="input-box">
+                <h4 style="color:#666">تسجيل كابتن جديد</h4>
+                <input type="text" id="driverName" placeholder="اسم الكابتن">
+                <input type="tel" id="driverPhone" placeholder="رقم الموبايل">
+                <button class="btn" style="background:var(--success)" onclick="addDriver()">إضافة الكابتن 🛺</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-map-marked-alt"></i> المناطق والتسعيرة المضافة</h3>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>اسم المنطقة</th><th>السعر</th><th>إجراء</th></tr></thead>
+                <tbody id="pricingList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-list-ul"></i> مراقبة الطلبات الحالية</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>النوع</th>
+                        <th>العميل</th>
+                        <th>من</th>
+                        <th>إلى</th>
+                        <th>الكابتن</th>
+                        <th>الحالة</th>
+                        <th>حذف</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-users-cog"></i> مديونيات وإدارة الكباتن</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الكابتن</th>
+                        <th>رقم الموبايل</th>
+                        <th>كود الدخول</th>
+                        <th>المديونية</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="driversList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyAsnynZvTRwXZyfcltKhagFW-tJM9zjuY8",
+  authDomain: "zezo-44313.firebaseapp.com",
+  projectId: "zezo-44313",
+  storageBucket: "zezo-44313.firebasestorage.app",
+  messagingSenderId: "90203005668",
+  appId: "1:90203005668:web:37b0ff361ce3305f5342f1",
+  measurementId: "G-L88VFNHHT8"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // إضافة منطقة
+    function addArea() {
+        const name = document.getElementById('areaName').value;
+        const price = document.getElementById('areaPrice').value;
+        if(name && price) {
+            db.ref('pricing/' + name).set({name, price}).then(() => {
+                alert("تم حفظ المنطقة");
+                document.getElementById('areaName').value = "";
+                document.getElementById('areaPrice').value = "";
+            });
+        }
+    }
+
+    // تسجيل سائق
+    function addDriver() {
+        const name = document.getElementById('driverName').value;
+        const phone = document.getElementById('driverPhone').value;
+        if(name && phone) {
+            const password = Math.floor(1000 + Math.random() * 9000);
+            db.ref('drivers/' + phone).set({
+                name, phone, password, commissionBalance: 0
+            }).then(() => {
+                alert("تم التسجيل. الكود: " + password);
+                document.getElementById('driverName').value = "";
+                document.getElementById('driverPhone').value = "";
+            });
+        }
+    }
+
+    // عرض المناطق وحذفها
+    db.ref('pricing').on('value', snap => {
+        let html = '';
+        snap.forEach(child => {
+            html += `<tr><td>${child.val().name}</td><td>${child.val().price} ج</td>
+            <td><button class="btn-del" onclick="db.ref('pricing/${child.key}').remove()">❌ حذف</button></td></tr>`;
+        });
+        document.getElementById('pricingList').innerHTML = html;
+    });
+
+    // عرض مديونيات السائقين وحذفهم (التعديل المطلوب)
+    db.ref('drivers').on('value', snap => {
+        let html = '';
+        snap.forEach(child => {
+            const d = child.val();
+            html += `
+                <tr>
+                    <td><b>${d.name}</b></td>
+                    <td>${d.phone}</td>
+                    <td style="color:var(--p); font-weight:bold">${d.password}</td>
+                    <td style="color:var(--danger); font-weight:bold">${(d.commissionBalance || 0).toFixed(2)} ج</td>
+                    <td>
+                        <button class="action-btn btn-reset" onclick="db.ref('drivers/${d.phone}').update({commissionBalance:0})">
+                            <i class="fas fa-sync"></i> تصفير
+                        </button>
+                        <button class="action-btn btn-del" style="margin-right:15px" onclick="confirmDeleteDriver('${d.phone}', '${d.name}')">
+                            <i class="fas fa-user-slash"></i> حذف السائق
+                        </button>
+                    </td>
+                </tr>`;
+        });
+        document.getElementById('driversList').innerHTML = html;
+    });
+
+    // وظيفة تأكيد الحذف
+    function confirmDeleteDriver(phone, name) {
+        if(confirm(`هل تريد حذف الكابتن ${name} نهائياً من النظام؟`)) {
+            db.ref('drivers/' + phone).remove().then(() => alert("تم الحذف بنجاح"));
+        }
+    }
+
+    // عرض الطلبات
+    db.ref('orders').on('value', snap => {
+        let html = '';
+        snap.forEach(child => {
+            const o = child.val();
+            html += `<tr>
+                <td><span class="badge ${o.serviceType==='مشوار'?'type-mishwar':'type-talab'}">${o.serviceType}</span></td>
+                <td>${o.customerPhone || ''}</td>
+                <td>${o.from}</td>
+                <td>${o.to || o.packageDescription}</td>
+                <td>${o.driverName || 'انتظار'}</td>
+                <td>${o.status === 'waiting' ? '⏳' : '✅'}</td>
+                <td><button class="btn-del" onclick="db.ref('orders/${child.key}').remove()">❌</button></td>
+            </tr>`;
+        });
+        document.getElementById('ordersList').innerHTML = html;
+    });
+</script>
+</body>
+</html>
